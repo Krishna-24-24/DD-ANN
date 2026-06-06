@@ -2,7 +2,9 @@
 ### Summer Research Internship Program (SRIP) 2026 — IIT Gandhinagar
 
 **Student:** Krishna (VIT Vellore) , Chitiveli Hemcharan Varma (IIT Gandhinagar)
+
 **Supervisor:** Dr. Abhinav Jha
+
 **Institute:** Indian Institute of Technology Gandhinagar  
 
 ---
