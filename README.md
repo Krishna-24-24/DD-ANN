@@ -26,9 +26,13 @@ arise in biomolecular simulation and solvation energy calculations.
 ## Repository Structure
 
 ├── phase1_1D/         # PINN for 1D differential equations
+
 ├── phase2_2D/      # PINN for 2D differential equations
+
 ├── phase3_3D/      # PINN for 3D differential equations
+
 ├── references/        # Key reference papers
+
 └── README.md
 
 ---
