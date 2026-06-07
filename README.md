@@ -43,9 +43,9 @@ arise in biomolecular simulation and solvation energy calculations.
 |-------|------|--------|
 | Phase 1 | PINN for 1D PDEs | ✅ Complete |
 | Phase 2 | PINN for 2D PDEs (hard BCs, Fourier features) | ✅ Complete |
-| Phase 2 | PINN for 3D PDEs | ✅ Complete |
-| Phase 3 | Domain Decomposition in 1D, 2D, 3D | 🔄 In Progress |
-| Phase 3 | Application to LPB / COSMO equations | ⏳ Upcoming |
+| Phase 3 | PINN for 3D PDEs | ✅ Complete |
+| Phase 4 | Domain Decomposition in 1D, 2D, 3D | 🔄 In Progress |
+| Phase 5 | Application to LPB / COSMO equations | ⏳ Upcoming |
 
 ---
 
