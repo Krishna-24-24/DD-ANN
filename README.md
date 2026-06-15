@@ -25,15 +25,21 @@ arise in biomolecular simulation and solvation energy calculations.
 
 ## Repository Structure
 
-├── phase1_1D/         # PINN for 1D differential equations
+├── phase1_PINN_1D/         # PINN for 1D differential equations
 
-├── phase2_2D/      # PINN for 2D differential equations
+├── phase2_PINN_2D/      # PINN for 2D differential equations
 
-├── phase3_3D/      # PINN for 3D differential equations
+├── phase3_PINN_3D/      # PINN for 3D differential equations
+
+├── phase4_DD_1D/      # DD-ANN for 1D differential equations
+
+├── phase5_DD_2D/      # PINN for 2D differential equations
 
 ├── references/        # Key reference papers
 
 └── README.md
+
+└── pinn.gitignore
 
 ---
 
@@ -44,8 +50,10 @@ arise in biomolecular simulation and solvation energy calculations.
 | Phase 1 | PINN for 1D PDEs | ✅ Complete |
 | Phase 2 | PINN for 2D PDEs (hard BCs, Fourier features) | ✅ Complete |
 | Phase 3 | PINN for 3D PDEs | ✅ Complete |
-| Phase 4 | Domain Decomposition in 1D, 2D, 3D | 🔄 In Progress |
-| Phase 5 | Application to LPB / COSMO equations | ⏳ Upcoming |
+| Phase 4 | Domain Decomposition in 1D | ✅ Complete |
+| Phase 5 | Domain Decomposition in 2D | ✅ Complete |
+| Phase 6 | Domain Decomposition in 3D | 🔄 In Progress |
+| Phase 7 | Application to LPB / COSMO equations | ⏳ Upcoming |
 
 ---
 
