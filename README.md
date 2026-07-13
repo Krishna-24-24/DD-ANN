@@ -96,15 +96,15 @@ DD-ANN employs a multi-process execution framework designed around Python's Glob
 ```mermaid
 graph TD
     subgraph MasterProcess ["Master Process (Main Thread)"]
-        Driver[Parent Driver / IPC Orchestrator]
-        Stitcher[Nominal Edge Stitching]
-        Timer[time.perf_counter Evaluation]
+        Driver["Parent Driver / IPC Orchestrator"]
+        Stitcher["Nominal Edge Stitching"]
+        Timer["time.perf_counter Evaluation"]
     end
     
     subgraph SubdomainWorkers ["Concurrent Subdomain Workers (torch.multiprocessing)"]
         direction LR
-        W1[Worker 1: Subdomain 1 <br> Pins: torch.set_num_threads(1)]
-        W2[Worker 2: Subdomain 2 <br> Pins: torch.set_num_threads(1)]
+        W1["Worker 1: Subdomain 1 <br> Pins: torch.set_num_threads(1)"]
+        W2["Worker 2: Subdomain 2 <br> Pins: torch.set_num_threads(1)"]
     end
     
     Driver <-->|IPC Pipe 1: sends BCs / receives interface queries| W1
