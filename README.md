@@ -18,17 +18,17 @@ Conventional Physics-Informed Neural Networks (PINNs) offer a mesh-free, fully d
 **DD-ANN** resolves these limitations by splitting the computational domain into overlapping subdomains. Small, independent neural networks are trained concurrently on separate subdomains and coupled iteratively using a **Jacobi-style overlapping Schwarz iteration**.
 
 ```
-                                                                       DOMAIN DECOMPOSITION (K = 2 Strips)
-                                                         ┌──────────────────────┬──────────────────────┐
-                                                         │     Subdomain 1      │     Subdomain 2      │
-                                                         │       ┌──────────────|──────────┐           │
-                                                         │       │              │          │           │
-                                                         │       │      Overlap │ Region   |           │
-                                                         │       │              │          │           │
-                                                         │       │              │          │           │
-                                                         │       └──────────────|──────────┘           │
-                                                         │     x = a            |         x = b        │
-                                                         x = 0 ______________________________________x = 1
+                                                         DOMAIN DECOMPOSITION (K = 2 Strips)
+                                           ┌──────────────────────┬──────────────────────┐
+                                           │     Subdomain 1      │     Subdomain 2      │
+                                           │       ┌──────────────|──────────┐           │
+                                           │       │              │          │           │
+                                           │       │      Overlap │ Region   |           │
+                                           │       │              │          │           │
+                                           │       │              │          │           │
+                                           │       └──────────────|──────────┘           │
+                                           │     x = a            |         x = b        │
+                                           x = 0 ______________________________________x = 1
 ```
 
 Because each subdomain network only solves a local, lower-frequency sub-problem:
