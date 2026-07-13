@@ -19,16 +19,16 @@ Conventional Physics-Informed Neural Networks (PINNs) offer a mesh-free, fully d
 
 ```
                            DOMAIN DECOMPOSITION (K = 2 Strips)
-             ┌───────────────────────┬───────────────────────┐
-             │     Subdomain 1       │     Subdomain 2       │
-             │   ┌───────────────────┼──────────┐            │
-             │   │                   │          │            │
-             │   │                   │  Overlap │            │
-             │   │                   │   Region │            │
-             │   │                   │          │            │
-             │   └───────────────────┼──────────┘            │
-             │                       │                       │
-             x = 0                 x = a_2      x = b_1      x = 1
+             ┌──────────────────────┬──────────────────────┐
+             │     Subdomain 1      │     Subdomain 2      │
+             │       ┌──────────────|──────────┐           │
+             │       │              │          │           │
+             │       │      Overlap │ Region   |           │
+             │       │              │          │           │
+             │       │              │          │           │
+             │       └──────────────|──────────┘           │
+             │     x = a            |         x = b        │
+             x = 0 ______________________________________x = 1
 ```
 
 Because each subdomain network only solves a local, lower-frequency sub-problem:
