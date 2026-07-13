@@ -18,17 +18,17 @@ Conventional Physics-Informed Neural Networks (PINNs) offer a mesh-free, fully d
 **DD-ANN** resolves these limitations by splitting the computational domain into overlapping subdomains. Small, independent neural networks are trained concurrently on separate subdomains and coupled iteratively using a **Jacobi-style overlapping Schwarz iteration**.
 
 ```
-                           DOMAIN DECOMPOSITION (K = 2 Strips)
-             ┌──────────────────────┬──────────────────────┐
-             │     Subdomain 1      │     Subdomain 2      │
-             │       ┌──────────────|──────────┐           │
-             │       │              │          │           │
-             │       │      Overlap │ Region   |           │
-             │       │              │          │           │
-             │       │              │          │           │
-             │       └──────────────|──────────┘           │
-             │     x = a            |         x = b        │
-             x = 0 ______________________________________x = 1
+                                                                       DOMAIN DECOMPOSITION (K = 2 Strips)
+                                                         ┌──────────────────────┬──────────────────────┐
+                                                         │     Subdomain 1      │     Subdomain 2      │
+                                                         │       ┌──────────────|──────────┐           │
+                                                         │       │              │          │           │
+                                                         │       │      Overlap │ Region   |           │
+                                                         │       │              │          │           │
+                                                         │       │              │          │           │
+                                                         │       └──────────────|──────────┘           │
+                                                         │     x = a            |         x = b        │
+                                                         x = 0 ______________________________________x = 1
 ```
 
 Because each subdomain network only solves a local, lower-frequency sub-problem:
@@ -95,13 +95,13 @@ DD-ANN employs a multi-process execution framework designed around Python's Glob
 
 ```mermaid
 graph TD
-    subgraph Master Process [Master Process (Main Thread)]
+    subgraph MasterProcess ["Master Process (Main Thread)"]
         Driver[Parent Driver / IPC Orchestrator]
         Stitcher[Nominal Edge Stitching]
         Timer[time.perf_counter Evaluation]
     end
     
-    subgraph Subdomain Workers [Concurrent Subdomain Workers (torch.multiprocessing)]
+    subgraph SubdomainWorkers ["Concurrent Subdomain Workers (torch.multiprocessing)"]
         direction LR
         W1[Worker 1: Subdomain 1 <br> Pins: torch.set_num_threads(1)]
         W2[Worker 2: Subdomain 2 <br> Pins: torch.set_num_threads(1)]
@@ -164,17 +164,24 @@ All measurements are obtained on an **Apple M3** (4 performance + 4 efficiency c
 ### 1. Phase 1 — 1D Poisson Results
 In 1D, subdomains are too small to outpace multiprocessing communication overhead at depth-3, but they deliver massive accuracy gains:
 
-**Table 1: 1D Accuracy (relative $L_2$ error, 6000 steps)**
-| Problem | Vanilla | DD (K=2) | Error Reduction |
-|:---|:---:|:---:|:---:|
-| $\sin(\pi x)$ (smooth) | 1.89e-03 | 1.46e-03 | 1.3× |
-| **$\sin(4\pi x)$ (high-freq)** | **2.45e+00** | **5.22e-01** | **4.7×** |
-| $e^x$ (non-zero BC) | 3.36e-04 | 1.06e-03 | 0.3× |
+**Table 1: 1D Accuracy (relative $L_2$ error)**
+| Problem | Vanilla PINN | DD-ANN (K=2) |
+|:---|:---:|:---:|
+| $\sin(\pi x)$ (smooth) | 1.89e-03 | 1.46e-03 |
+| **$\sin(4\pi x)$ (high-freq)** | **2.45e+00** | **5.22e-01** |
+| $e^x$ (non-zero BC) | 3.36e-04 | 1.06e-03 |
 
-**Table 2: 1D Wall-Clock vs. Network Depth on $\sin(4\pi x)$**
-| Depth | Vanilla params | DD params (K=2) | Speed-up (DD/vanilla) |
+**Table 2: 1D Vanilla PINN vs. True-Parallel DD (capacity-matched)**
+| Problem | Vanilla $L_2$ | DD $L_2$ | Vanilla (s) | DD (s) | DD vs van |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| $\sin(\pi x)$ | 1.89e-03 | 1.46e-03 | 9.67 | 9.85 | 0.98× |
+| $\sin(4\pi x)$ | 2.45e+00 | 5.22e-01 | 8.52 | 9.09 | 0.94× |
+| $e^x$ | 3.36e-04 | 1.06e-03 | 8.37 | 9.04 | 0.93× |
+
+**Table 6: 1D Wall-Clock vs. Network Depth on $\sin(4\pi x)$ (matched 6,000-step budget)**
+| Network Depth | Vanilla params | DD params (K=2) | DD vs. vanilla |
 |:---:|:---:|:---:|:---:|
-| 3 | 4,654 | 4,418 | 0.94× (Overhead-bound) |
+| 3 (reported above) | 4,654 | 4,418 | 0.94× |
 | 5 | 9,166 | 8,642 | 0.99× |
 | 8 | 15,934 | 14,978 | **1.06×** |
 
@@ -185,8 +192,14 @@ In 1D, subdomains are too small to outpace multiprocessing communication overhea
 ### 2. Phase 2 — 2D Poisson Results
 2D strips carry larger workloads, placing DD comfortably above parity across all benchmark problems:
 
-**Table 3: Full 2D Sweep — Vanilla vs. Sequential vs. Parallel DD ($K=2$)**
-| Problem | $L_2$ van | $L_2$ DD | van (s) | seq (s) | par (s) | Speed-up (par/seq) | Speed-up (par/van) |
+**Table 3: 2D Accuracy (relative $L_2$ error)**
+| Problem | Vanilla PINN | DD-ANN (K=2) |
+|:---|:---:|:---:|
+| $\sin(\pi x)\sin(\pi y)$ (smooth) | 1.24e-04 | 4.96e-03 |
+| $\sin(\pi x)\sin(3\pi y)$ (anisotropic) | 2.44e-02 | 1.57e-02 |
+
+**Table 4: Full 2D Sweep — Vanilla vs. Sequential vs. True-Parallel DD ($K=2$, identical hyper-parameters)**
+| Problem | $L_2$ van | $L_2$ DD | van (s) | seq (s) | par (s) | DD/seq | DD/van |
 |:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | Poisson sin11 | 1.24e-04 | 4.96e-03 | 42.48 | 45.38 | 29.65 | 1.53× | **1.43×** |
 | Poisson sin13 | 2.44e-02 | 1.57e-02 | 49.06 | 44.66 | 27.49 | 1.62× | **1.78×** |
@@ -196,6 +209,12 @@ In 1D, subdomains are too small to outpace multiprocessing communication overhea
 | Helmholtz k4  | 2.00e+00 | 2.00e+00 | 44.85 | 44.03 | 27.03 | 1.63× | **1.66×** |
 | Helmholtz k9  | 2.40e+00 | 2.05e+00 | 43.88 | 45.71 | 27.51 | 1.66× | **1.60×** |
 
+**Table 5: Parallel vs. Sequential DD (genuine concurrency)**
+| Problem | DD $L_2$ | Sequential (s) | Parallel (s) | Speed-up |
+|:---|:---:|:---:|:---:|:---:|
+| 1D $\sin(4\pi x)$ | 5.22e-01 | 15.62 | 9.63 | **1.62×** |
+| 2D $\sin(\pi x)\sin(3\pi y)$ | 1.57e-02 | 44.66 | 27.49 | **1.62×** |
+
 *Note: Helmholtz cases fail on both vanilla and DD due to Poisson-tuned hyperparameters, showing a training constraint rather than a DD defect.*
 
 ---
@@ -203,7 +222,7 @@ In 1D, subdomains are too small to outpace multiprocessing communication overhea
 ### 3. Phase 3 — 3D Electrostatic Results
 3D operators are decomposed into 2 overlapping slabs. Timings show a consistent parallel speed-up:
 
-**Table 4: 3D Electrostatics Sweep ($K=2$, matched capacity)**
+**Table 7: 3D Benchmark — Vanilla PINN vs. Sequential vs. True-Parallel DD ($K=2$, capacity-matched, identical hyper-parameters)**
 | Problem | Operator | $L_2$ van | $L_2$ DD | van (s) | seq (s) | par (s) | DD/seq | DD/van |
 |:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | `pois_111` | $-\Delta u = f$ | 1.61e-03 | 1.55e-02 | 53.70 | 59.53 | 43.18 | 1.38× | **1.24×** |
@@ -215,17 +234,17 @@ In 1D, subdomains are too small to outpace multiprocessing communication overhea
 ### 4. Right-Sizing Subdomain Networks
 Holding the global vanilla network size fixed, we shrink the subdomain network width ($m \to t$) to examine capacity limits:
 
-**Table 5: Matched-Capacity vs. Tuned Subdomain Sizing ($K=2$)**
-| Dim | Problem | Matched Width | Matched $L_2$ | Matched Speed-up | Tuned Width | Tuned $L_2$ | Tuned Speed-up |
-|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|
-| **1D** | $\sin(\pi x)$ | 32 | 1.46e-03 | 0.89× | **8** | 1.49e-03 | **1.13×** |
-| **1D** | $\sin(4\pi x)$ | 32 | 5.22e-01 | 0.87× | **8** | 5.70e-01 | **1.06×** |
-| **2D** | $\sin(\pi x)\sin(\pi y)$ | 64 | 4.96e-03 | 1.40× | **20** | 5.05e-03 | **2.64×** |
-| **2D** | $\sin(\pi x)\sin(3\pi y)$ | 64 | 1.57e-02 | 1.38× | **20** | 2.93e-02 | **2.97×** |
-| **2D** | $\sin(3\pi x)\sin(3\pi y)$ | 64 | 1.85e-01 | 1.16× | **48** | 1.89e-01 | **1.13×** |
-| **3D** | Poisson | 64 | 1.55e-02 | 1.21× | **48** | 1.75e-02 | **1.72×** |
-| **3D** | LPB ($\kappa=3$) | 64 | 3.43e-02 | 1.28× | **48** | 5.09e-02 | **1.89×** |
-| **3D** | COSMO | 64 | 3.53e-02 | 0.90× | **48** | 5.18e-02 | **1.44×** |
+**Table 8: Right-Sizing the Subdomains — Smallest Slab Network Whose $L_2$ Stays Within 2× of Capacity-Matched DD (matched $\to$ tuned), $K=2$**
+| Dim | Problem | Matched Width | Matched $L_2$ | Matched Speed-up | $\to$ | Tuned Width | Tuned $L_2$ | Tuned Speed-up |
+|:---:|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **1D** | $\sin(\pi x)$ | 32 | 1.46e-03 | 0.89× | $\to$ | **8** | 1.49e-03 | **1.13×** |
+| **1D** | $\sin(4\pi x)$ | 32 | 5.22e-01 | 0.87× | $\to$ | **8** | 5.70e-01 | **1.06×** |
+| **2D** | $\sin(\pi x)\sin(\pi y)$ | 64 | 4.96e-03 | 1.40× | $\to$ | **20** | 5.05e-03 | **2.64×** |
+| **2D** | $\sin(\pi x)\sin(3\pi y)$ | 64 | 1.57e-02 | 1.38× | $\to$ | **20** | 2.93e-02 | **2.97×** |
+| **2D** | $\sin(3\pi x)\sin(3\pi y)$ | 64 | 1.85e-01 | 1.16× | $\to$ | **48** | 1.89e-01 | **1.13×** |
+| **3D** | Poisson | 64 | 1.55e-02 | 1.21× | $\to$ | **48** | 1.75e-02 | **1.72×** |
+| **3D** | LPB ($\kappa=3$) | 64 | 3.43e-02 | 1.28× | $\to$ | **48** | 5.09e-02 | **1.89×** |
+| **3D** | COSMO | 64 | 3.53e-02 | 0.90× | $\to$ | **48** | 5.18e-02 | **1.44×** |
 
 *Shrinking subdomain capacity significantly reduces the training cost, pushing 2D speed-ups close to **3.0×** and 3D speed-ups close to **1.9×**.*
 
@@ -255,6 +274,22 @@ The recovered speed-up at the "sweet spot" (the smallest network width whose L2 
 
 ![Tuned Speedup Summary](Result%20%28graphs%29/figure4_slabsize_summary.png)
 
+### 5. Prototyping PDF Reports & Vector Plots
+High-resolution vector plots and schematics generated during early prototyping phases are stored in the [Graphs/](Graphs/) folder:
+
+| Dimension / Phase | File Link | Description |
+|:---:|:---|:---|
+| **1D Baseline** | [PINN-1D-Soft_Constraints.pdf](Graphs/PINN-1D-Soft_Constraints.pdf) | Comparison of 1D global PINN training using soft boundary penalty losses. |
+| **1D Baseline** | [PINN-1D-hard_Constraints.pdf](Graphs/PINN-1D-hard_Constraints.pdf) | Comparison of 1D global PINN training using hard exact boundary constraints. |
+| **1D DD** | [DDANN-1D-Overlapping.pdf](Graphs/DDANN-1D-Overlapping.pdf) | Overlapping Schwarz DD-PINN 1D profiles and local subdomain solutions. |
+| **1D DD** | [DDANN-1D-Schwarz-HardConstraints.pdf](Graphs/DDANN-1D-Schwarz-HardConstraints.pdf) | 1D overlapping Schwarz using exact interface injection (hard constraints). |
+| **1D DD** | [DDANN-1D-Schwarz-SoftConstraints.pdf](Graphs/DDANN-1D-Schwarz-SoftConstraints.pdf) | 1D overlapping Schwarz using soft interface penalties. |
+| **2D Baseline** | [PINN  2D.pdf](Graphs/PINN%20%202D.pdf) | 2D Poisson solver validation on the unit square using a standard global PINN. |
+| **2D DD** | [DDANN-2D-overlapping.pdf](Graphs/DDANN-2D-overlapping.pdf) | Visual partitions of 2D overlapping strip boundaries and solution contours. |
+| **2D DD** | [DDANN-2D-Schwarz.pdf](Graphs/DDANN-2D-Schwarz.pdf) | 2D overlapping Schwarz strip convergence rates and local error profiles. |
+| **2D Architecture** | [DDANN-2D-compact-hardBCs-architecture.pdf](Graphs/DDANN-2D-compact-hardBCs-architecture.pdf) | Architectural neural network schematic of the 2D hard-boundary PINN. |
+| **3D Baseline** | [PINN 3D.pdf](Graphs/PINN%203D.pdf) | Volumetric slices and validation contour comparisons for the 3D electrostatic solver. |
+
 ---
 
 ## 📂 Repository Structure
@@ -262,15 +297,25 @@ The recovered speed-up at the "sweet spot" (the smallest network width whose L2 
 ```
 DD-ANN/
 ├── Graphs/                          # High-resolution PDF output plots
-├── Phase1_PINN_1D/                  # Jupyter notebooks for 1D PINN prototyping
-├── Phase2_PINN_2D/                  # Jupyter notebooks for 2D PINN prototyping
-├── Phase3_PINN_3D/                  # Jupyter notebooks for 3D LPB prototyping
+├── Phase1_PINN_1D/                  
+│   ├── pinn_1D.ipynb                # Prototyping 1D Poisson equations via standard PINN
+│   └── pinn_1D_hard_BCs.ipynb      # Prototyping 1D PINNs with hard boundary conditions
+├── Phase2_PINN_2D/                  
+│   └── pinn_2d_heatEquation.ipynb   # Prototyping 2D Poisson & heat equations via PINN
+├── Phase3_PINN_3D/                  
+│   └── pinn_3d_LPB.ipynb            # Prototyping 3D Linearized Poisson-Boltzmann via PINN
 ├── Phase4_DD_1D/
 │   ├── dd_parallel_mp.py            # 1D Solver (vanilla PINN, sequential, parallel)
-│   └── run_all_1d.py                # 1D Sweep CLI runner
+│   ├── run_all_1d.py                # 1D Sweep CLI runner
+│   ├── nonoverlap_dd_1D.ipynb       # 1D Non-overlapping Schwarz DD prototyping (divergent/self-referential)
+│   ├── schwarz_dd_hard_BCs.ipynb    # 1D Overlapping Schwarz with exact interface injection
+│   └── schwarz_dd_pinn_1D.ipynb     # 1D Overlapping Schwarz DD-PINN prototyping
 ├── Phase5_DD_2D/
 │   ├── dd_parallel_mp_2d.py         # 2D Solver (vanilla, sequential, parallel strips)
-│   └── run_all_problems.py          # 2D Sweep CLI runner
+│   ├── run_all_problems.py          # 2D Sweep CLI runner
+│   ├── schwarz_dd_pinn_2D.ipynb     # 2D Overlapping Schwarz DD-PINN strip prototyping (soft boundary)
+│   ├── schwarz_heat2d_compact.ipynb # 2D Schwarz DD using compact architectures
+│   └── schwarz_heat2d_dd.ipynb      # 2D Schwarz DD for the heat equation
 ├── Phase6_DD_3D/
 │   ├── dd_parallel_mp_3d.py         # 3D Solver (Poisson, LPB, COSMO slabs)
 │   └── run_all_3d.py                # 3D Sweep CLI runner
