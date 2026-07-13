@@ -43,29 +43,29 @@ Because each subdomain network only solves a local, lower-frequency sub-problem:
 We validate DD-ANN on a family of coercive elliptic operators on the unit hypercube $\Omega = [0,1]^d$:
 
 * **1D / 2D Poisson:**
-  $$-&Delta; u = f, \quad u\big|_{&part;\Omega} = 0$$
+  $$-\Delta u = f, \quad u\big|_{\partial\Omega} = 0$$
 * **3D Poisson (Uniform Dielectric):**
-  $$-&Delta; u = f, \quad u\big|_{&part;\Omega} = 0$$
+  $$-\Delta u = f, \quad u\big|_{\partial\Omega} = 0$$
 * **3D Linearized Poisson–Boltzmann (LPB) (Debye screening):**
-  $$-&Delta; u + \kappa^2 u = f, \quad u\big|_{&part;\Omega} = 0$$
+  $$-\Delta u + \kappa^2 u = f, \quad u\big|_{\partial\Omega} = 0$$
   where $\kappa$ represents the inverse Debye screening length.
 * **3D COSMO (Variable Dielectric):**
-  $$-&nabla; \cdot (&epsilon;(\mathbf{r}) &nabla; u) = f, \quad u\big|_{&part;\Omega} = 0$$
-  where $&epsilon;(\mathbf{r}) = 1 + a_x x + a_y y + a_z z$ is an affine dielectric function representing the boundary interface between a solute and a solvent.
+  $$-\nabla \cdot (\varepsilon(\mathbf{r}) \nabla u) = f, \quad u\big|_{\partial\Omega} = 0$$
+  where $\varepsilon(\mathbf{r}) = 1 + a_x x + a_y y + a_z z$ is an affine dielectric function representing the boundary interface between a solute and a solvent.
 
 ---
 
 ### 2. Exact Boundary Conditions (Hard Constraints)
 Instead of enforcing boundary conditions (BCs) through soft penalties in the loss function, DD-ANN imposes them **exactly** by construction using a distance-function ansatz:
-$$u_&theta;(\mathbf{x}) = \text{lift}(\mathbf{x}) + d(\mathbf{x}) N_&theta;(\mathbf{x})$$
+$$u_\theta(\mathbf{x}) = \text{lift}(\mathbf{x}) + d(\mathbf{x}) N_\theta(\mathbf{x})$$
 
-Where $d(\mathbf{x})$ is a boundary distance function that vanishes on $&part;\Omega$:
+Where $d(\mathbf{x})$ is a boundary distance function that vanishes on $\partial\Omega$:
 * **1D:** $d(x) = (x-a)(x-b)$ on subdomain $[a,b]$.
 * **2D:** $d(x,y) = x(1-x)y(1-y)$ on $[0,1]^2$.
 * **3D:** $d(x,y,z) = x(1-x)y(1-y)z(1-z)$ on $[0,1]^3$.
 
-Since $d(\mathbf{x}) = 0$ on $&part;\Omega$, the boundary conditions hold exactly for any neural network output $N_&theta;$. The training objective is simplified to the **pure PDE residual**:
-$$L(&theta;) = \frac{1}{N} \sum_{i=1}^N \left( \mathcal{R}(u_&theta;(\mathbf{x}_i)) \right)^2$$
+Since $d(\mathbf{x}) = 0$ on $\partial\Omega$, the boundary conditions hold exactly for any neural network output $N_\theta$. The training objective is simplified to the **pure PDE residual**:
+$$L(\theta) = \frac{1}{N} \sum_{i=1}^N \left( \mathcal{R}(u_\theta(\mathbf{x}_i)) \right)^2$$
 
 ---
 
@@ -128,9 +128,9 @@ graph TD
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Driver as Parent Driver Process
-    participant W1 as Subdomain 1 (Worker)
-    participant W2 as Subdomain 2 (Worker)
+    actor Driver as "Parent Driver Process"
+    participant W1 as "Subdomain 1 (Worker)"
+    participant W2 as "Subdomain 2 (Worker)"
     Note over Driver, W2: Initialize networks and interface boundaries
     Note over Driver, W2: Schwarz Iteration Loop (Round n)
     Driver->>W1: Send current interface BCs (left_bc, right_bc)
